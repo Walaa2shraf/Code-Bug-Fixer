@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Code Bug Fixer</title>
+  <link rel="stylesheet" href="main.css" />
+</head>
+<body>
+  <div class="header">
+    <h1>Code Bug Fixer</h1>
+  </div>
+  <!-- main -->
+
+  <form id="bugFixerForm">
+    <div class="inputs">
+      <div id="leftCol">
+        <textarea
+          id="bug"
+          name="buggy code"
+          placeholder="Enter Code"
+        ></textarea>
+        <textarea
+          id="error"
+          name="error"
+          placeholder="Enter Error"
+        ></textarea>
+      </div>
+      <!-- the other side -->
+      <div id="rightCol">
+        <textarea
+          id="fixed"
+          name="Fixing code"
+          readonly
+          class=""
+          placeholder="here is the Error of your code. "
+        ></textarea>
+        <textarea
+          id="explain"
+          name="Explanation"
+          readonly
+          class=""
+          placeholder="here is the Explanation ."
+        ></textarea>
+      </div>
+    </div>
+    <div class="btn">
+      <button type="button" id="fix-btn" class="">Code Fix</button>
+    </div>
+  </form>
+
+  <script>
+    // The prompt
+    let codeInput = document.getElementById("bug");
+    let errorInput = document.getElementById("error");
+    let fixedCodeOutput = document.getElementById("fixed");
+    let explanationOutput = document.getElementById("explain");
+
+    let fixBtn = document.getElementById("fix-btn");
+    fixBtn.addEventListener("click", onClick);
+
+    async function onClick() {
+      let code = codeInput.value;
+      let error = errorInput.value;
+      let fixPrompt = `Fix this code:${code}\nError:\n${error}.\nRespond only with the fixed code.`;
+      let explanation = `Explain the error in this code without fixing it:${code}\nError:\n${error}\nRespond only with the explanation of the Error.`;
+
+      try {
+        // Fetch for fixing the code
+        let fixResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer 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"
+          },
+          body: JSON.stringify({
+            model: "gpt-3.5-turbo",
+            messages: [{
+              role: "user",
+              content: fixPrompt
+            }],
+            max_tokens: 100
+          })
+        });
+
+        let fixedCode = await fixResponse.json();
+        fixedCodeOutput.textContent = fixedCode.choices[0].message.content;
+
+        // Fetch for providing explanation
+        let explanationResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer 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"
+          },
+          body: JSON.stringify({
+            model: "gpt-3.5-turbo",
+            messages: [{
+              role: "user",
+              content: explanation
+            }],
+            max_tokens: 100
+          })
+        });
+
+        let explanationData = await explanationResponse.json();
+        explanationOutput.textContent = explanationData.choices[0].message.content;
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    }
+  </script>
+</body>
+</html>
