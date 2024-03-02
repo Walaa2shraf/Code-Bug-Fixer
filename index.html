@@ -55,6 +55,8 @@
     let errorInput = document.getElementById("error");
     let fixedCodeOutput = document.getElementById("fixed");
     let explanationOutput = document.getElementById("explain");
+    const apiKey = `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`;
+
 
     let fixBtn = document.getElementById("fix-btn");
     fixBtn.addEventListener("click", onClick);
@@ -71,7 +73,7 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": "Bearer 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"
+            "Authorization": `Bearer ${apiKey} `
           },
           body: JSON.stringify({
             model: "gpt-3.5-turbo",
@@ -91,7 +93,7 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": "Bearer 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"
+            "Authorization":  `Bearer ${apiKey} `
           },
           body: JSON.stringify({
             model: "gpt-3.5-turbo",
