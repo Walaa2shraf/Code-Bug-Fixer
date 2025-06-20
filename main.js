@@ -1,75 +1,57 @@
-// const express = require("express");
-// const OpenAI = require("openai");
-// const app = express();
-// app.use(express.json());
-// // API key
-// const openai = new OpenAI({
-//   apiKey: "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",
-// });
+const codeInput = document.getElementById("bug");
+const errorInput = document.getElementById("error");
+const fixedCodeOutput = document.getElementById("fixed");
+const explanationOutput = document.getElementById("explain");
+const fixBtn = document.getElementById("fix-btn");
 
-// // The prompt
-// let code = document.getElementById("bug").value;
-// let error = document.getElementById("error").value;
+const apiKey = "AIzaSyDwkiSwymK9Wut4oZGN6RwDzKUc7I1tdGQ";
 
-// let fixPrompt = `Fix this code:${code}
-// Error:
-// ${error}.
-// Respond only with the fixed code.`;
+const GEMINI_API_URL =
+  "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=" +
+  apiKey;
 
-// let explanation = `Explain the error in this code without fixing it:${code}
-// Error:
-// ${error} 
-// Respond only with the explanation of the Error.`;
+fixBtn.addEventListener("click", async () => {
+  const code = codeInput.value.trim();
+  const error = errorInput.value.trim();
 
-// // ===================================================
-// // button
-// let fixBtn = document.getElementById("fix-btn");
-// fixBtn.addEventListener("click", onClick);
+  if (!code || !error) {
+    alert("Please write the code and the first error ✨");
+    return;
+  }
 
-// // The functions:
-// function onClick() {
-//   app.post("https://api.openai.com/v1/chat/completions", async (req, res) => {
-//     const prompt = req.body.prompt;
-//     const response = await openai.chat.completions.create({
-//       model: "gpt-3.5-turbo",
-//       messages: [
-//         {
-//           role: "user",
-//           content: prompt + fixPrompt,
-//         },
-//       ],
-//       max_tokens: 100,
-//     });
-//     res.send(response.choices[0].message.content);
-//     const text = prompt.text();
-//     const json = JSON.parse(text);
-//     fixedCode.innerText = json.code;
-//     document.getElementById("fixed").textContent = res.send(
-//       response.choices[0].message.content
-//     );
-//   });
+  // Prompt للتصليح
+  const fixPrompt = `Fix this code:\n${code}\n\nError:\n${error}\n\nRespond with the fixed code only.`;
 
-//   app.post("https://api.openai.com/v1/chat/completions", async (req, res) => {
-//     const prompt2 = req.body.prompt2;
-//     const response = await openai.chat.completions.create({
-//       model: "gpt-3.5-turbo",
-//       messages: [
-//         {
-//           role: "user",
-//           content: prompt2 + explanation,
-//         },
-//       ],
-//       max_tokens: 100,
-//     });
-//     res.send(response.choices[0].message.content);
-//     const text = prompt2.text();
-//     const json = JSON.parse(text);
-//     fixedCode.innerText = json.code;
-//     document.getElementById("explain").textContent = res.send(
-//       response.choices[0].message.content
-//     );
-//   });
-// }
-// // how can I do it via (fetch) method not express library ?????!!!!!!!!! 😭😭
+  // Prompt للشرح
+  const explainPrompt = `Explain the error in this code:\n${code}\n\nError:\n${error}\n\nRespond with the explanation only.`;
 
+  try {
+    // تصليح الكود
+    const fixRes = await fetch(GEMINI_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contents: [{ parts: [{ text: fixPrompt }] }] }),
+    });
+    const fixData = await fixRes.json();
+    fixedCodeOutput.value =
+      fixData?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "Something went wrong ⚠️";
 
+    // شرح الخطأ
+    const explainRes = await fetch(GEMINI_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: explainPrompt }] }],
+      }),
+    });
+    const explainData = await explainRes.json();
+    explanationOutput.value =
+      explainData?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "Something went wrong ⚠️";
+  } catch (err) {
+    console.error(err);
+    fixedCodeOutput.value = "There is a problem with the connection.⚠️";
+    explanationOutput.value = "There is a problem with the connection.⚠️";
+  }
+});
